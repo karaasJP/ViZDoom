@@ -4,7 +4,7 @@
 # This script presents how to use the most basic features of the environment.
 # It configures the engine, and makes the agent perform random actions.
 # It also gets current state and reward earned with the action.
-# <episodes> number of episodes are played. 
+# <episodes> number of episodes are played.
 # Random combination of buttons is chosen for every action.
 # Game variables from state and last reward are printed.
 #
@@ -16,6 +16,9 @@ from vizdoom import *
 
 from random import choice
 from time import sleep
+
+import cv2  # OpenCVのインポートを追加
+
 
 # Create DoomGame instance. It will run the game and communicate with you.
 game = DoomGame()
@@ -57,9 +60,10 @@ game.set_render_particles(False)
 game.set_render_effects_sprites(False)  # Smoke and blood
 game.set_render_messages(False)  # In-game messages
 game.set_render_corpses(False)
-game.set_render_screen_flashes(True)  # Effect upon taking damage or picking up items
+# Effect upon taking damage or picking up items
+game.set_render_screen_flashes(True)
 
-# Adds buttons that will be allowed. 
+# Adds buttons that will be allowed.
 game.add_available_button(Button.MOVE_LEFT)
 game.add_available_button(Button.MOVE_RIGHT)
 game.add_available_button(Button.ATTACK)
@@ -86,7 +90,7 @@ game.set_living_reward(-1)
 game.set_mode(Mode.PLAYER)
 
 # Enables engine output to console.
-#game.set_console_enabled(True)
+# game.set_console_enabled(True)
 
 # Initialize the game. Further configuration won't take any effect from now on.
 game.init()
@@ -101,7 +105,7 @@ episodes = 10
 
 # Sets time that will pause the engine after each action (in seconds)
 # Without this everything would go too fast for you to keep track of what's happening.
-sleep_time = 1.0 / DEFAULT_TICRATE # = 0.028
+sleep_time = 1.0 / DEFAULT_TICRATE  # = 0.028
 
 for i in range(episodes):
     print("Episode #" + str(i + 1))
@@ -123,6 +127,30 @@ for i in range(episodes):
         automap_buf = state.automap_buffer
         labels = state.labels
 
+        ret, bw_buf = cv2.threshold(
+            labels_buf, 50, 255, cv2.THRESH_BINARY_INV)    # 2値化
+        cv2.imshow('ViZDoom 2ti Buffer', bw_buf)    # 2ちか画像を表示
+        # 輪郭の抽出
+        image, contours, hierarchy = cv2.findContours(
+            bw_buf, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+
+        detect_count = 0    # 矩形検出された数（デフォルトで0を指定）
+
+        for i in range(0, len(contours)):   # 各輪郭に対する処理
+            area = cv2.contourArea(contours[i])  # 輪郭の領域を計算
+            if area < 100 or 20000 < area:    # ノイズ（小さすぎる領域）と全体の輪郭（大きすぎる領域）を除外
+                continue
+            print(area)
+            # 外接矩形
+            if len(contours[i]) > 0:
+                rect = contours[i]
+                x, y, w, h = cv2.boundingRect(rect)
+                output_screen = cv2.rectangle(
+                    bw_buf, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                detect_count += 1
+
+        cv2.imshow('rect screen', output_screen)
+
         # Makes a random action and get remember reward.
         r = game.make_action(choice(actions))
 
@@ -143,6 +171,7 @@ for i in range(episodes):
 
         if sleep_time > 0:
             sleep(sleep_time)
+            cv2.waitKey(int(sleep_time * 1000))
 
     # Check how the episode went.
     print("Episode finished.")
@@ -150,4 +179,5 @@ for i in range(episodes):
     print("************************")
 
 # It will be done automatically anyway but sometimes you need to do it in the middle of the program...
+cv2.destroyAllWindows()
 game.close()
