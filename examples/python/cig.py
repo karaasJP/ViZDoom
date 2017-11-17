@@ -45,6 +45,20 @@ while not game.is_episode_finished():
 
     # Make your action.
     game.make_action(choice(actions))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     frags = game.get_game_variable(GameVariable.FRAGCOUNT)
     if frags != last_frags:
         last_frags = frags

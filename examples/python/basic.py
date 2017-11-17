@@ -33,7 +33,7 @@ game = DoomGame()
 game.set_doom_scenario_path("../../scenarios/basic.wad")
 
 # Sets map to start (scenario .wad files can contain many maps).
-game.set_doom_map("map01")
+game.set_doom_map("map02")
 
 # Sets resolution. Default is 320X240
 game.set_screen_resolution(ScreenResolution.RES_640X480)
@@ -117,7 +117,6 @@ for i in range(episodes):
 
         # Gets the state
         state = game.get_state()
-
         # Which consists of:
         n = state.number
         vars = state.game_variables
@@ -126,10 +125,11 @@ for i in range(episodes):
         labels_buf = state.labels_buffer
         automap_buf = state.automap_buffer
         labels = state.labels
+        print(screen_buf)
 
         ret, bw_buf = cv2.threshold(
             labels_buf, 50, 255, cv2.THRESH_BINARY_INV)    # 2値化
-        cv2.imshow('ViZDoom 2ti Buffer', bw_buf)    # 2ちか画像を表示
+        # cv2.imshow('ViZDoom 2ti Buffer', bw_buf)    # 2ちか画像を表示
         # 輪郭の抽出
         image, contours, hierarchy = cv2.findContours(
             bw_buf, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
@@ -148,11 +148,25 @@ for i in range(episodes):
                 output_screen = cv2.rectangle(
                     bw_buf, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 detect_count += 1
+                print("x,y = " + str((x,y)))
 
         cv2.imshow('rect screen', output_screen)
 
         # Makes a random action and get remember reward.
-        r = game.make_action(choice(actions))
+        # r = game.make_action(choice(actions))
+
+        position_center = x + w/2
+        position_left = x
+        position_right = x + w
+        print("center = " + str(position_center))
+        if position_left >= 335:
+            r = game.make_action([0, 1, 0])
+            print("go right")
+        elif position_right <= 315:
+            r = game.make_action([1, 0, 0])
+            print('go left')
+        else:
+            r = game.make_action([0, 0, 1])
 
         # Makes a "prolonged" action and skip frames:
         # skiprate = 4
