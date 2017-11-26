@@ -50,9 +50,9 @@ last_frags = 0
 bots = 7
 
 # Run this many episodes
-episodes = 10
+episodes = 1
 # sleep_time = 1.0 / DEFAULT_TICRATE  # = 0.028
-sleep_time = 0.01
+sleep_time = 0.1
 for i in range(episodes):
 
     print("Episode #" + str(i + 1))
@@ -74,35 +74,44 @@ for i in range(episodes):
         screen_buf = state.screen_buffer
         # cv2.imshow('screen_buf', screen_buf)
 
-        ret, screen_buf = cv2.threshold(
-            screen_buf, 123, 255, cv2.THRESH_BINARY)    # 2値化
-        cv2.imshow(' ', screen_buf)
-
-        RGB = cv2.split(screen_buf)
-        Blue   = RGB[0]
-        Green = RGB[1]
-        Red    = RGB[2]
-
-        ret, Blue = cv2.threshold(
-            Blue, 120, 255, cv2.THRESH_BINARY)    # 2値化
-        ret, Green = cv2.threshold(
-            Green, 120, 255, cv2.THRESH_BINARY)    # 2値化
-        ret, Red = cv2.threshold(
-            Red, 120, 255, cv2.THRESH_BINARY)    # 2値化
-
-        cv2.imshow("Blue",Blue)
-        cv2.imshow("Green",Green)
-        cv2.imshow("Red",Red)
-
         gray_screen = cv2.cvtColor(screen_buf, cv2.COLOR_RGB2GRAY)
         # cv2.imshow('gray_screen', gray_screen)
+
+        # average_square = (25, 25)
+        # # x軸方向の標準偏差
+        # sigma_x = 1
+        # # Gaussianオペレータを使用して平滑化
+        # img_gauss = cv2.GaussianBlur(gray_screen, average_square, sigma_x)
+        # cv2.imshow('' , img_gauss)
 
         ret, bw_screen = cv2.threshold(
             gray_screen, 70, 255, cv2.THRESH_BINARY)    # 2値化
         # cv2.imshow('bw_screen', bw_screen)    # 2ちか画像を表示
+        cv2.imshow('black and white', bw_screen)
+        image, contours, hierarchy = cv2.findContours(
+            bw_screen, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        detect_count = 0    # 矩形検出された数（デフォルトで0を指定）
+        output_screen = None
+        for i in range(0, len(contours)):   # 各輪郭に対する処理
+            area = cv2.contourArea(contours[i])  # 輪郭の領域を計算
+            if area < 300 or 20000 < area:    # ノイズ（小さすぎる領域）と全体の輪郭（大きすぎる領域）を除外
+                continue
+            print(area)
+            # 外接矩形
+            if len(contours[i]) > 0:
+                rect = contours[i]
+                x, y, w, h = cv2.boundingRect(rect)
+                output_screen = cv2.rectangle(
+                    screen_buf, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                detect_count += 1
+                print("x,y = " + str((x,y)))
+
+        if output_screen is not None:
+            cv2.imshow('rect screen', output_screen)
 
         # Make your action.
-        game.make_action(choice(actions))
+        game.make_action(actions[0])
 
         frags = game.get_game_variable(GameVariable.FRAGCOUNT)
         if frags != last_frags:

@@ -125,7 +125,6 @@ for i in range(episodes):
         labels_buf = state.labels_buffer
         automap_buf = state.automap_buffer
         labels = state.labels
-        print(screen_buf)
 
         ret, bw_buf = cv2.threshold(
             labels_buf, 50, 255, cv2.THRESH_BINARY_INV)    # 2値化
