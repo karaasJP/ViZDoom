@@ -150,7 +150,7 @@ for i in range(episodes):
                 print("x,y = " + str((x,y)))
 
         cv2.imshow('rect screen', output_screen)
-
+        cv2.moveWindow('labels_buf', 700, 0)
         # Makes a random action and get remember reward.
         # r = game.make_action(choice(actions))
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-
 from random import choice
 from vizdoom import *
 from time import sleep
