@@ -143,7 +143,7 @@ for i in range(episodes):
                     if lock > 0:
                         action = actions[5]
                     else:
-                        lock = 20
+                        lock = 30
                         print("ショット時動作、ロック")
 
             game.make_action(action)

@@ -57,18 +57,23 @@ def label(labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pr
         if enemy != []:
             x, y, w, h = cv2.boundingRect(contours[enemy[0]])
 
-            dx = 320 - x
+            dx = 321 - x
+            center = x + w/2
             print(dx)
-            if 340 < x:
+            if 340 < center:
                 action = [0, 0, 0, 0, 0, 0, 0, 5, 0]
-            elif 327 < x <= 340:
+            elif 327 < center <= 340:
                 action = [0, 0, 0, 0, 0, 0, 0, 1, 0]
-            elif 300 <= x < 313:
+            elif 321 < center <= 327:
+                action = [0, 0, 1, 0, 0, 0, 0, 1, 0]
+            elif 313 <= center <= 321:
+                action = [0, 0, 1, 0, 0, 0, 0, -1, 0]
+            elif 300 <= center < 313:
                 action = [0, 0, 0, 0, 0, 0, 0, -1, 0]
-            elif x < 300:
+            elif center < 300:
                 action = [0, 0, 0, 0, 0, 0, 0, -5, 0]
             else:
-                if 160 < y + h / 2 < 240:
+                if 190 < y and y+h < 210:
                     action = [0, 0, 1]
                 else:
                     action = actions[5]
@@ -107,14 +112,16 @@ def depth(depth_buf, actions, repeat):
     left = int(left / 110)
     right = int(right / 110)
 
-    print("left = " + str(left) + ", right = " + str(right))
+    # print("left = " + str(left) + ", right = " + str(right))
     if left <= 7 and right <= 7:
         repeat = [1, [0,0,0,0,0,0,0,70,0], "前方に壁"]
     elif left <= 7:
-        repeat = [2, actions[3], "左が暗いので右へ移動"]
+        repeat = [2, [0,0,0,1,0,1,0,0,0], "左が暗いので右へ移動"]
     elif right <= 7:
-        repeat = [2, actions[4], "右が暗いので左へ移動"]
-    # elif left <= 10 or right <= 10:
-    #     repeat = [1, [], "障害物あり、射撃をロック"]
+        repeat = [2, [0,0,0,0,1,1,0,0,0], "右が暗いので左へ移動"]
+    elif left <= 10:
+        repeat = [2, [0,1,0,0,0,1,0,0,0], "左に障害物あり、射撃をロック"]
+    elif right <= 10:
+        repeat = [2, [1,0,0,0,0,1,0,0,0], "右に障害物あり、射撃をロック"]
 
     return (repeat)
