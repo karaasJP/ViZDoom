@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 import random
 import copy
+import datetime
 
 import find
 
@@ -66,10 +67,13 @@ actions = [[1, 0, 0, 0, 0, 0, 0, 0, 0],  # 0 TURN_LEFT
            [0, 0, 0, 0, 0, 0, 0, 1, 0],  # 7 TURN_LEFT_RIGHT_DELTA
            [0, 0, 0, 0, 0, 0, 0, 0, 1]]  # 8 LOOK_UP_DOWN_DELTA
 
-search_actions = [[0, 0, 0, 0, 0, 0, 0, 30, 0],
-                  [0, 0, 0, 0, 0, 1, 0, 0, 0],
-                  [1, 0, 0, 0, 0, 1, 0, 0, 0]]
+search_actions = [[0, 0, 0, 0, 0, 0, 0, 5, 0],
+                  [0, 1, 0, 0, 0, 1, 0, 0, 0]]
 last_frags = 0
+repeat = [0, actions[1], "action name"]
+pre_finders = []
+pre2_finders = []
+lock = 0
 
 # Play with this many bots
 bots = 12
@@ -116,20 +120,43 @@ for i in range(episodes):
         cv2.moveWindow('depth_buf', 0, 500)
         # cv2.moveWindow('labels_buf', 0, 1000)
 
-        if n > 10:
-            action = find.label(labels_buf, screen_buf, actions)
-
-        # tekitou.tekitou(labels_buf)
+        if n > 15:
+            # labels_bufを見る
+            action, repeat, pre_finders, pre2_finders = find.label(
+                labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pre2_finders)
+            # depth_bufを見る
+            repeat = find.depth(depth_buf, actions, repeat)
 
         # Make your action.
         if n <= 15:
             # [i * 100 for i in actions[7]]
-            game.make_action(actions[5])
+            game.make_action([0, 0, 0, 0, 0, 1, 0, 0, 0])
+
+        elif repeat[0] != 0:
+            game.make_action(repeat[1])
+            print("REPEAT " + repeat[2])
+            repeat[0] -= 1
+
         elif action is not None:
+            if len(action) >= 3:
+                if action[2] == 1:  # ショット時動作
+                    if lock > 0:
+                        action = actions[5]
+                    else:
+                        lock = 20
+                        print("ショット時動作、ロック")
+
             game.make_action(action)
+
+            if action == [0, 0, 0, 0, 0, 0, 0, 80]:
+                print("首振り解除動作")
+
         else:
+            print("サーチアクションを実行中")
             game.make_action(random.choice(search_actions))
 
+        if lock > 0:
+            lock -= 1
 # *************************************************************
 
         frags = game.get_game_variable(GameVariable.FRAGCOUNT)
@@ -139,6 +166,8 @@ for i in range(episodes):
 
         # Check if player is dead
         if game.is_player_dead():
+            if n > 100:
+                repeat = [10, actions[5], "死んだときの初期動作"]
             print("Player died.")
             # Use this to respawn immediately after death, new state will be available.
             game.respawn_player()
@@ -148,6 +177,16 @@ for i in range(episodes):
             cv2.waitKey(int(sleep_time * 1000))
 
     print("Episode finished.")
+    f = open('results.txt', 'a')
+    now = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+    intfrags = int(last_frags)
+    if intfrags >= 0:
+
+        strfrags = " " + str(intfrags)
+    else:
+        strfrags = " " + str(intfrags)
+    f.write(strfrags + '   @' + now + '\n')
+    f.close
     print("************************")
 
     # Starts a new episode. All players have to call new_episode() in multiplayer mode.

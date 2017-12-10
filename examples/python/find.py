@@ -2,7 +2,8 @@ import cv2
 import random
 
 
-def label(labels_buf, screen_buf, actions):
+def label(labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pre2_finders):
+    current_finders = []
     img = cv2.threshold(labels_buf, 10, 255,
                         cv2.THRESH_BINARY)[1]
 
@@ -24,53 +25,96 @@ def label(labels_buf, screen_buf, actions):
         if len(contours[i]) > 0:
             rect = contours[i]
             x, y, w, h = cv2.boundingRect(rect)
+            rect_area = w * h
+            dS = rect_area - area
+            DS = int((dS / area) * 100)
+            # print(str(i) + " DS = " + str(DS) +
+            #       " (x,y) = " + str((x, y)), end=", ")
+            current_finders.append([i, x, y, w, h])
 
-            print(str(i) + " area = " + str(area), end=", ")
-            print("(x,y) = " + str((x, y)), end=" ")
-
-            if w*2.5 > h > w * 2:
-                enemy.append(i)
-                print("enemy")
-            else:
-                print("")
+            if w * 2.5 > h > w * 1.3:
+                if DS >= 70:
+                    enemy.append(i)
+                    print("enemy" + str(DS))
+                # else:
+                    # print("")
+            # else:
+                # print("")
 
             # 矩形の描写
             output_screen = cv2.rectangle(
                 output_screen, (x, y), (x + w, y + h), (100, 100, 255), 2)
             # 数字をふる
             cv2.putText(output_screen, str(i), (int(
-                x + w / 2), int(y + h / 2)), cv2.FONT_HERSHEY_PLAIN, 2, (255, 150, 150))
+                x), int(y)), cv2.FONT_HERSHEY_PLAIN, 2, (255, 150, 150))
             detect_count += 1
 
     # 矩形を描写した画像の表示
+    cv2.imshow("output", output_screen)
+    cv2.moveWindow('output', 700, 870)
     if 0 < detect_count:
-        cv2.imshow("output", output_screen)
-        cv2.moveWindow('output', 700, 870)
-
         # アクションを決める
         if enemy != []:
             x, y, w, h = cv2.boundingRect(contours[enemy[0]])
 
             dx = 320 - x
-            if x > 335:
-                action = [0, 1, 0, 0, 0, 0]
-            elif x < 305:
-                action = [1, 0, 0, 0, 0, 0]
+            print(dx)
+            if 340 < x:
+                action = [0, 0, 0, 0, 0, 0, 0, 5, 0]
+            elif 327 < x <= 340:
+                action = [0, 0, 0, 0, 0, 0, 0, 1, 0]
+            elif 300 <= x < 313:
+                action = [0, 0, 0, 0, 0, 0, 0, -1, 0]
+            elif x < 300:
+                action = [0, 0, 0, 0, 0, 0, 0, -5, 0]
             else:
-                if 160 < y+h/2 < 240:
+                if 160 < y + h / 2 < 240:
                     action = [0, 0, 1]
                 else:
                     action = actions[5]
         else:
-            if x > 335:
-                action = [0, 1, 0, 0, 0, 0]
-            elif x < 305:
-                action = [1, 0, 0, 0, 0, 0]
-            else:
-                action = actions[5]
-    else:   # 矩形が見つからないとき探索モード
-        choices = [[0, 1, 0], [0, 0, 0, 0, 0, 1]]
-        randomchoice = random.randint(0, 1)
-        action = choices[randomchoice]
+            if y >= 30:
+                if x > 335:
+                    action = [0, 1, 0, 0, 0, 0]
+                elif x < 305:
+                    action = [1, 0, 0, 0, 0, 0]
+                else:
+                    action = actions[5]
 
-    return (action)
+    # 前のフレームと比較
+    if pre_finders != []:
+        if current_finders == []:
+            repeat = [3, actions[5], "パックを取得"]
+        elif pre2_finders == current_finders and lock == 0:
+            # repeat = [5, actions[5], "首振り解除"]
+            action = [0, 0, 0, 0, 0, 0, 0, 80]
+    pre2_finders = pre_finders
+    pre_finders = current_finders
+
+    return (action, repeat, pre_finders, pre2_finders)
+
+
+def depth(depth_buf, actions, repeat):
+    x_left = 250
+    x_right = 390
+    y_range = [240,350]
+    left = right = 0
+
+    for y in range(y_range[0], y_range[1]):
+        left += depth_buf[y][x_left]
+        right += depth_buf[y][x_right]
+
+    left = int(left / 110)
+    right = int(right / 110)
+
+    print("left = " + str(left) + ", right = " + str(right))
+    if left <= 7 and right <= 7:
+        repeat = [1, [0,0,0,0,0,0,0,70,0], "前方に壁"]
+    elif left <= 7:
+        repeat = [2, actions[3], "左が暗いので右へ移動"]
+    elif right <= 7:
+        repeat = [2, actions[4], "右が暗いので左へ移動"]
+    # elif left <= 10 or right <= 10:
+    #     repeat = [1, [], "障害物あり、射撃をロック"]
+
+    return (repeat)
