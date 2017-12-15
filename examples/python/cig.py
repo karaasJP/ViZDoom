@@ -9,68 +9,10 @@ from time import sleep
 import cv2
 import numpy as np
 import random
+import copy
+import datetime
 
-
-def detect_yellow(img):
-    # HSV色空間に変換
-    img = cv2.bilateralFilter(img,9,100,500)
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    # cv2.imshow("hsv", hsv)
-    # cv2.imshow("bilateral", hsv)
-    # 緑色のHSVの値域1
-    # hsv_min = np.array([50, 150, 50])
-    # hsv_max = np.array([70, 255, 240])
-
-    hsv_min = np.array([13, 130, 120])
-    hsv_max = np.array([14, 175, 230])
-    maskyellow = cv2.inRange(hsv, hsv_min, hsv_max)
-    maskyellow = maskyellow[160:240,:]
-    cv2.imshow("yellow", maskyellow)
-
-    hsv_min = np.array([0, 0, 120])
-    hsv_max = np.array([0, 0, 130])
-    maskgray = cv2.inRange(hsv, hsv_min, hsv_max)
-    maskgray = maskgray[160:240,:]
-    cv2.imshow("gray", maskgray)
-
-    cv2.imshow("yellow and gray", maskgray + maskyellow)
-    maskall = maskgray + maskyellow
-
-    image, contours, hierarchy = cv2.findContours(
-        maskall, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
-    detect_count = 0    # 矩形検出された数（デフォルトで0を指定）
-    output_screen = img
-    for i in range(0, len(contours)):   # 各輪郭に対する処理
-        area = cv2.contourArea(contours[i])  # 輪郭の領域を計算
-        if area < 4 or 30 < area:    # ノイズ（小さすぎる領域）と全体の輪郭（大きすぎる領域）を除外
-            continue
-        # print(area)
-        # 外接矩形
-        if len(contours[i]) > 0:
-            rect = contours[i]
-            x, y, w, h = cv2.boundingRect(rect)
-            y += 160
-            if h/1.5 < w < h:
-                output_screen = cv2.rectangle(
-                    output_screen, (x, y), (x + w, y + h), (100, 100, 255), 2)
-                detect_count += 1
-                print("x,y = " + str((x, y)))
-
-    if 0 < detect_count < 4:
-        print("detect enemy")
-        cv2.imshow("yellow", output_screen)
-        if x > 330:
-            game.make_action([0,1,0,0,0,0])
-        elif x < 315:
-            game.make_action([1,0,0,0,0,0])
-        else:
-            game.make_action([0,0,1])
-    else:
-        choices = [[0,1,0], [0,0,0,0,0,1]]
-        randomchoice = random.randint(0,1)
-        game.make_action(choices[randomchoice])
-    return (img)
+import find
 
 
 game = DoomGame()
@@ -92,7 +34,20 @@ game.add_game_args("+name MIYATA +colorset 0")
 #game.set_mode(Mode.PLAYER)
 game.set_mode(Mode.ASYNC_PLAYER)
 
-#game.set_window_visible(False)
+game.set_window_visible(True)
+
+# Enables depth buffer.
+game.set_depth_buffer_enabled(True)
+# Enables labeling of in game objects labeling.
+game.set_labels_buffer_enabled(True)
+# Enables buffer with top down map of he current episode/level .
+game.set_automap_buffer_enabled(True)
+game.set_automap_mode(AutomapMode.OBJECTS)
+game.set_automap_rotate(False)
+game.set_automap_render_textures(False)
+
+game.set_render_hud(True)
+game.set_render_minimal_hud(False)
 
 # Sets resolution. Default is 320X240
 game.set_screen_resolution(ScreenResolution.RES_640X480)
@@ -103,12 +58,24 @@ game.set_screen_format(ScreenFormat.RGB24)
 
 game.init()
 
-output_screen = None
 # Three example sample actions
-actions = [[1, 0, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 1, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 1, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0]]
+actions = [[1, 0, 0, 0, 0, 0, 0, 0, 0],  # 0 TURN_LEFT
+           [0, 1, 0, 0, 0, 0, 0, 0, 0],  # 1 TURN_RIGHT
+           [0, 0, 1, 0, 0, 0, 0, 0, 0],  # 2 ATTACK
+           [0, 0, 0, 1, 0, 0, 0, 0, 0],  # 3 MOVE_LEFT
+           [0, 0, 0, 0, 1, 0, 0, 0, 0],  # 4 MOVE_RIGHT
+           [0, 0, 0, 0, 0, 1, 0, 0, 0],  # 5 MOVE_FORWARD
+           [0, 0, 0, 0, 0, 0, 1, 0, 0],  # 6 MOVE_BACKWARD
+           [0, 0, 0, 0, 0, 0, 0, 1, 0],  # 7 TURN_LEFT_RIGHT_DELTA
+           [0, 0, 0, 0, 0, 0, 0, 0, 1]]  # 8 LOOK_UP_DOWN_DELTA
+
+search_actions = [[0, 0, 0, 0, 0, 1, 0, 5, 0],
+                  [0, 1, 0, 0, 0, 1, 0, 0, 0]]
+
+repeat = [0, actions[1], "action name"]
+pre_finders = []
+pre2_finders = []
+lock = 0
 
 # Get player's number
 player_number = int(game.get_game_variable(GameVariable.PLAYER_NUMBER))
@@ -121,16 +88,67 @@ sleep_time = 0.01
 while not game.is_episode_finished():
 
     # Get the state.
-    state = game.get_state()
+    s = game.get_state()
+    n = s.number
+    vars = s.game_variables
+    screen_buf = s.screen_buffer
+    depth_buf = s.depth_buffer
+    labels_buf = s.labels_buffer
+    automap_buf = s.automap_buffer
+    labels = s.labels
+    if n % 10 == 0:
+        print(n)
+    action = None
 
+# ***********************************************************
     # Analyze the state.
-    screen_buf = state.screen_buffer
-    # cv2.imshow('screen_buf', screen_buf)
 
-    output_screen = detect_yellow(screen_buf)
+    cv2.imshow('depth_buf', depth_buf)
+    # cv2.imshow('labels_buf', labels_buf)
+    cv2.imshow('automap_buf', automap_buf)
 
-    if output_screen is not None:
-        cv2.imshow('rect screen', output_screen)
+    cv2.moveWindow('automap_buf', 0, 0)
+    cv2.moveWindow('depth_buf', 640, 0)
+    # cv2.moveWindow('labels_buf', 0, 1000)
+
+    if n > 15:
+        # labels_bufを見る
+        action, repeat, pre_finders, pre2_finders = find.label(
+            labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pre2_finders)
+        # depth_bufを見る
+        repeat = find.depth(depth_buf, actions, repeat)
+
+    # Make your action.
+    if n <= 15:
+        # [i * 100 for i in actions[7]]
+        game.make_action([0, 0, 0, 0, 0, 1, 0, 0, 0])
+
+    elif repeat[0] != 0:
+        game.make_action(repeat[1])
+        print("REPEAT " + repeat[2])
+        repeat[0] -= 1
+
+    elif action is not None:
+        if len(action) >= 3:
+            if action[2] == 1:  # ショット時動作
+                if lock > 0:
+                    action = actions[5]
+                else:
+                    lock = 30
+                    print("ショット時動作、ロック")
+
+        game.make_action(action)
+
+        if action == [0, 0, 0, 0, 0, 0, 0, 80]:
+            print("首振り解除動作")
+
+    else:
+        print("サーチアクションを実行中")
+        game.make_action(random.choice(search_actions))
+
+    if lock > 0:
+        lock -= 1
+# *************************************************************
 
     if sleep_time > 0:
         sleep(sleep_time)
@@ -144,6 +162,8 @@ while not game.is_episode_finished():
 
     # Check if player is dead
     if game.is_player_dead():
+        if n > 100:
+            repeat = [10, actions[5], "死んだときの初期動作"]
         print("Player " + str(player_number) + " died.")
         # Use this to respawn immediately after death, new state will be available.
         game.respawn_player()

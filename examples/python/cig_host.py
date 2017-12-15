@@ -13,7 +13,7 @@ game.set_doom_map("map01")  # Limited deathmatch.
 #game.set_doom_map("map02")  # Full deathmatch.
 
 # Host game with options that will be used in the competition.
-game.add_game_args("-host 2 "               # This machine will function as a host for a multiplayer game with this many players (including this machine). It will wait for other machines to connect using the -join parameter and then start the game when everyone is connected.
+game.add_game_args("-host 3 "               # This machine will function as a host for a multiplayer game with this many players (including this machine). It will wait for other machines to connect using the -join parameter and then start the game when everyone is connected.
                    "-deathmatch "           # Deathmatch rules are used for the game.
                    "+timelimit 10.0 "       # The game (episode) will end after this many minutes have elapsed.
                    "+sv_forcerespawn 1 "    # Players will respawn automatically after they die.
@@ -22,7 +22,7 @@ game.add_game_args("-host 2 "               # This machine will function as a ho
                    "+sv_spawnfarthest 1 "   # Players will be spawned as far as possible from any other players.
                    "+sv_nocrouch 1 "        # Disables crouching.
                    "+viz_respawn_delay 10 " # Sets delay between respanws (in seconds).
-                   "+viz_nocheat 1")        # Disables depth and labels buffer and the ability to use commands that could interfere with multiplayer game.
+                   "+viz_nocheat 0")        # Disables depth and labels buffer and the ability to use commands that could interfere with multiplayer game.
 
 # This can be used to host game without taking part in it (can be simply added as argument of vizdoom executable).
 #game.add_game_args("viz_spectator 1")
