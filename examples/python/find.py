@@ -1,17 +1,22 @@
 import cv2
 import random
-
+import numpy as np
 
 def label(labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pre2_finders):
     current_finders = []
     img = cv2.threshold(labels_buf, 10, 255,
                         cv2.THRESH_BINARY)[1]
 
+    for i in range(0,230):
+        img[400][i] = 0
+    for i in range(400,640):
+        img[400][i] = 0
+        
     image, contours, hierarchy = cv2.findContours(
         img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-    cv2.imshow("labels_buf", image)
-    cv2.moveWindow('labels_buf', 0, 1000)
+    cv2.imshow("labels_buf", img)
+    cv2.moveWindow('labels_buf', 0, 850)
 
     detect_count = 0    # 矩形検出された数（デフォルトで0を指定）
     enemy = []

@@ -81,7 +81,7 @@ bots = 12
 # Run this many episodes
 episodes = 1
 # sleep_time = 1.0 / DEFAULT_TICRATE  # = 0.028
-sleep_time = 0.028
+sleep_time = 0.02
 
 for i in range(episodes):
 
