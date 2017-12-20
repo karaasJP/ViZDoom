@@ -16,9 +16,6 @@ def label(labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pr
     image, contours, hierarchy = cv2.findContours(
         img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-    # cv2.imshow("labels_buf", img)
-    cv2.moveWindow('labels_buf', 1280, 0)
-
     detect_count = 0    # 矩形検出された数（デフォルトで0を指定）
     enemy = []
 
@@ -55,9 +52,10 @@ def label(labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pr
                 x), int(y)), cv2.FONT_HERSHEY_PLAIN, 2, (255, 150, 150))
             detect_count += 1
 
-    # 矩形を描写した画像の表示
-    # cv2.imshow("output", output_screen)
-    cv2.moveWindow('output', 0, 480)
+        # 矩形を描写した画像の表示
+        cv2.imshow("output", output_screen)
+        cv2.moveWindow('output', 1280, 0)
+
     if 0 < detect_count:
         # アクションを決める
         if enemy != []:

@@ -103,9 +103,9 @@ while not game.is_episode_finished():
 # ***********************************************************
     # Analyze the state.
 
-    cv2.imshow('depth_buf', depth_buf)
+    # cv2.imshow('depth_buf', depth_buf)
     # cv2.imshow('labels_buf', labels_buf)
-    cv2.imshow('automap_buf', automap_buf)
+    # cv2.imshow('automap_buf', automap_buf)
 
     cv2.moveWindow('automap_buf', 0, 0)
     cv2.moveWindow('depth_buf', 640, 0)
