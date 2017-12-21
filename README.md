@@ -1,5 +1,8 @@
-# 
-最新　examples/python/cigbots.py
+# 制作物
+最新
+examples/python/cigbots.py ,
+examples/python/find.py ,
+examples/python/cig0.py
 プレゼン資料　ルートディレクトリに入ってます。
 
 # ViZDoom [![Build Status](https://travis-ci.org/mwydmuch/ViZDoom.svg?branch=master)](https://travis-ci.org/mwydmuch/ViZDoom)
