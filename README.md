@@ -1,3 +1,7 @@
+# 
+最新　examples/python/cigbots.py
+プレゼン資料　ルートディレクトリに入ってます。
+
 # ViZDoom [![Build Status](https://travis-ci.org/mwydmuch/ViZDoom.svg?branch=master)](https://travis-ci.org/mwydmuch/ViZDoom)
 [http://vizdoom.cs.put.edu.pl](http://vizdoom.cs.put.edu.pl)
 
