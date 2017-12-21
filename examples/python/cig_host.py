@@ -13,7 +13,7 @@ game.set_doom_map("map01")  # Limited deathmatch.
 #game.set_doom_map("map02")  # Full deathmatch.
 
 # Host game with options that will be used in the competition.
-game.add_game_args("-host 3 "               # This machine will function as a host for a multiplayer game with this many players (including this machine). It will wait for other machines to connect using the -join parameter and then start the game when everyone is connected.
+game.add_game_args("-host 2 "               # This machine will function as a host for a multiplayer game with this many players (including this machine). It will wait for other machines to connect using the -join parameter and then start the game when everyone is connected.
                    "-deathmatch "           # Deathmatch rules are used for the game.
                    "+timelimit 3.0 "       # The game (episode) will end after this many minutes have elapsed.
                    "+sv_forcerespawn 1 "    # Players will respawn automatically after they die.

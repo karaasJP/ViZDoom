@@ -12,9 +12,6 @@ def label(labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pr
     for i in range(400, 640):
         img[400][i] = 0
 
-    cv2.imshow("2",img)
-    cv2.moveWindow('2', 0, 540)
-
     image, contours, hierarchy = cv2.findContours(
         img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -33,18 +30,12 @@ def label(labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pr
             rect_area = w * h
             dS = rect_area - area
             DS = int((dS / area) * 100)
-            # print(str(i) + " DS = " + str(DS) +
-            #       " (x,y) = " + str((x, y)), end=", ")
+
             current_finders.append([i, x, y, w, h])
 
             if w * 2.5 > h > w * 1.3:
                 if DS >= 70:
                     enemy.append(i)
-                    print("enemy" + str(DS))
-                # else:
-                    # print("")
-            # else:
-                # print("")
 
             # 矩形の描写
             output_screen = cv2.rectangle(
@@ -53,10 +44,6 @@ def label(labels_buf, screen_buf, actions, action, repeat, lock, pre_finders, pr
             cv2.putText(output_screen, str(i), (int(
                 x), int(y)), cv2.FONT_HERSHEY_PLAIN, 2, (255, 150, 150))
             detect_count += 1
-
-        # 矩形を描写した画像の表示
-        cv2.imshow("output", output_screen)
-        cv2.moveWindow('output', 0, 0)
 
     if 0 < detect_count:
         # アクションを決める
@@ -116,7 +103,6 @@ def depth(depth_buf, actions, repeat):
     left = int(left / 110)
     right = int(right / 110)
 
-    # print("left = " + str(left) + ", right = " + str(right))
     if left <= 7 and right <= 7:
         repeat = [1, [0, 0, 0, 0, 0, 0, 0, 70, 0], "前方に壁"]
     elif left <= 7:

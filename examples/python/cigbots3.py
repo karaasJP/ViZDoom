@@ -81,7 +81,7 @@ bots = 12
 # Run this many episodes
 episodes = 3
 # sleep_time = 1.0 / DEFAULT_TICRATE  # = 0.028
-sleep_time = 0.005
+sleep_time = 0.012
 
 for i in range(episodes):
 
@@ -112,12 +112,12 @@ for i in range(episodes):
 
 # ***********************************************************
         # Analyze the state.
-        cv2.imshow('depth_buf', depth_buf)
+        # cv2.imshow('depth_buf', depth_buf)
         # cv2.imshow('labels_buf', labels_buf)
-        cv2.imshow('automap_buf', automap_buf)
+        # cv2.imshow('automap_buf', automap_buf)
 
-        cv2.moveWindow('automap_buf', 0, 0)
-        cv2.moveWindow('depth_buf', 640, 0)
+        # cv2.moveWindow('automap_buf', 0, 0)
+        # cv2.moveWindow('depth_buf', 640, 0)
         # cv2.moveWindow('labels_buf', 0, 1000)
 
         if n > 15:
