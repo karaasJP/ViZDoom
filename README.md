@@ -3,7 +3,7 @@
 examples/python/cigbots.py ,  
 examples/python/find.py ,  
 examples/python/cig0.py  
-## プレゼン資料　ルートディレクトリに入ってます。  
+### プレゼン資料　ルートディレクトリに入ってます。  
 
 # ViZDoom [![Build Status](https://travis-ci.org/mwydmuch/ViZDoom.svg?branch=master)](https://travis-ci.org/mwydmuch/ViZDoom)
 [http://vizdoom.cs.put.edu.pl](http://vizdoom.cs.put.edu.pl)
