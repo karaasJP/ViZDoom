@@ -49,7 +49,7 @@ game.add_game_args("-host 1 -deathmatch +timelimit 3.0 "
 
 # Name your agent and select color
 # colors: 0 - green, 1 - gray, 2 - brown, 3 - red, 4 - light gray, 5 - light brown, 6 - light red, 7 - light blue
-game.add_game_args("+name MIYATA +colorset 0")
+game.add_game_args("+name dynamite +colorset 0")
 
 game.set_mode(Mode.PLAYER)
 
@@ -81,7 +81,7 @@ bots = 12
 # Run this many episodes
 episodes = 3
 # sleep_time = 1.0 / DEFAULT_TICRATE  # = 0.028
-sleep_time = 0.012
+sleep_time = 0.006
 
 for i in range(episodes):
 
